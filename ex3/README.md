@@ -19,10 +19,22 @@ We suggest that you first try to get a general understanding of the entire speci
 Make sure that you have a good understanding of:
 
 - What is the client, the authorization endpoint, the redirection endpoint, and the token endpoint?
-- Which messages are sent by the client to the authorization endpoint (and back)?
-- Which messages are sent by the client to the token endpoint (and back)?
-- Which channels are used between what clients?
+<span style="color:green">
+The client is an application that makes requests for protected resources with the end-user's authorization and on their behalf. The authorization endpoint is the authorization server endpoint used by the client to obtain authorization grant from the end-user. The redirection endpoint, on the other hand, is used by the authorization server to return responses containing authorization credentials to the client. Finally, the token endpoint is used by the client to exchange an authorization grant (previously obtained using the authorization endpoint) for an access token.  
+</span>
 
+- Which messages are sent by the client to the authorization endpoint (and back)?
+<span style="color:green">
+First, the client sends a message to the authorization endpoint to get the initial authorization grant. This message includes its client identifier, requested scope, local state, and a redirection URI. If the end-user grants the client's access request, the client receives an authorization code through the redirection URI provided earlier to the authorization server. 
+</span>
+- Which messages are sent by the client to the token endpoint (and back)?
+<span style="color:green">
+If the authorization grant step succeeds, the client sends a message requesting an access token from the authorization server's token endpoint (this message should include the authorization code received in the authorization grant step). As in the authorization grant step, the client includes the redirection URI in the message. If the authorization server manages to authenticate the client, validate the authoirzation code and check that the redirection URI matches the one used in the authorization grant step, it sends back an access token.
+</span>
+- Which channels are used between what clients?
+<span style="color:red">
+What do we mean by what channels? And isn't there only one client?
+</span>
 ## Step 2: The Model
 
 Create a first model of the authorization code flow in Tamarin.

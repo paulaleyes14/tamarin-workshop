@@ -66,6 +66,9 @@ Don't forget to regularly load your model, and check the executability lemma!
 Now you can prove properties of your model!
 Look at the lemmas that are commented out in the skeleton file.
 Do you expect them to hold for the protocol specification above?
+<span style="color:green">
+I do expect them to hold. The ResponderKeySecrecy and InitiatorKeySecrecy lemmas specify that the responder key and initiator key, respectively, should remain secret. Similarly, the SendMsgSecrecy specifies that the adversary should not be able to recover the original plaintext. There are no rules that the adversary could take advantage of to obtain knowledge of the keys or message, so the lemmas should hold. 
+<span>
 
 Comment them out and try proving them!
 Discuss your results with your peers.

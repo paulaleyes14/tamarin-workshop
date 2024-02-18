@@ -4,38 +4,34 @@ begin
 builtins: symmetric-encryption, diffie-hellman
 
 rule Ltk:
-  // let publicComponent = _^_ in
-  []
+  let publicComponent = 'g'^~sk in
+  [Fr(~sk)]
   -->
-  []
+  [!Ltk($P, ~sk), !Pk($P, publicComponent), Out(publicComponent)]
 
 rule A_Init:
-  []
+  [!Pk($A, pkA)]
   --[ ReachAInit() ]->
-  [ // Out(...)
-  // , St_A(...)
+  [ Out(<$A,$B,pkA>)
+   , St_A($A,$B)
   ]
 
 rule B_Init:
-  // let sharedKey = _^_ in
-  [ // In(...)
+  let sharedKey = pkA^~sk in
+  [ !Ltk($B,~sk), !Pk($A,pkA), !Pk($B,pkB), In(<$A,$B,pkA>)
   ]
-  --[ ReachBInit()
-    // , ResponderKey(_)
+  --[ ReachBInit(), ResponderKey(sharedKey)
     ]->
-  [ // Out(...)
+  [  Out(<senc('ack',sharedKey),$A,$B,pkB>)
   ]
 
 rule A_SendMsg:
-  // let sharedKey = _^_ in
-  [ // In(...)
-  // , St_A(...)
+  let sharedKey = pkB^~sk in
+  [ !Ltk($A,~sk), Fr(~msg), !Pk($B, pkB), In(<Boback,$A,$B,pkB>) , St_A($A,$B)
   ]
-  --[ ReachASendMsg()
-    // MessageWasSent(_)
-    // , InitiatorKey(_)
+  --[ ReachASendMsg(),MessageWasSent(~msg), InitiatorKey(sharedKey), Eq(sdec(Boback,sharedKey),'ack')
     ]->
-  [ // Out(...)
+  [ Out(senc(~msg,sharedKey))
   ]
 
 // This restriction allows you to use the Eq action fact in rules to constrain
@@ -43,8 +39,8 @@ rule A_SendMsg:
 // terms, e.g., to check that signature verification is equal to true.
 // This rule is only commented out right now to suppress a warning that Eq is
 // referenced but not used. Un-comment it whenever you want!
-// restriction Eq:
-//   "All t1 t2 #x. Eq(t1, t2) @ #x ==> t1 = t2"
+restriction Eq:
+   "All t1 t2 #x. Eq(t1, t2) @ #x ==> t1 = t2"
 
 lemma Executability:
   exists-trace
@@ -52,13 +48,15 @@ lemma Executability:
 
 // K(m) @ #t means that the adversary knows message m at timepoint #t.
 // Again, the following lemmas are commented out to suppress warnings.
-// lemma ResponderKeySecrecy:
-//   "All k #t. ResponderKey(k) @ #t ==> not Ex #x. K(k) @ #x"
+lemma ResponderKeySecrecy:
+  "All k #t. ResponderKey(k) @ #t ==> not Ex #x. K(k) @ #x"
 
-// lemma InitiatorKeySecrecy:
-//   "All k #t. InitiatorKey(k) @ #t ==> not Ex #x. K(k) @ #x"
+// This lemma is saying that the key of the initiator remains secret
+lemma InitiatorKeySecrecy:
+  "All k #t. InitiatorKey(k) @ #t ==> not Ex #x. K(k) @ #x"
 
-// lemma SendMsgSecrecy:
-//   "All m #t. MessageWasSent(m) @ #t ==> not Ex #x. K(m) @ #x"
+// This lemma says that the plaintext of the encrypted message also remains secret
+lemma SendMsgSecrecy:
+  "All m #t. MessageWasSent(m) @ #t ==> not Ex #x. K(m) @ #x"
 
 end
