@@ -4,14 +4,11 @@ begin
 builtins: symmetric-encryption
 
 rule KeyGen:
-  [ Fr(~k) ]
-  -->
-  [ !LongTermKey($A, ~k) ]
+  [Fr(~k)]-->[!LongTermKey($A, ~k)]
 
 rule SendMsg:
   [!LongTermKey($A, ~k), Fr(~msg)]
-  --[ MessageWasSentBy($A, ~msg)
-    ]->
+  --[MessageWasSentBy($A, ~msg)]->
   [Out(senc(~msg,~k))]
 
 rule Leak:

@@ -7,32 +7,24 @@ rule Ltk:
   let publicComponent = 'g'^~sk in
   [Fr(~sk)]
   -->
-  [!Ltk($P, ~sk), !Pk($P, publicComponent), Out(publicComponent)]
+  [!Ltk($A, ~sk), !Pk($A, publicComponent), Out(publicComponent)]
 
 rule A_Init:
-  [!Pk($A, pkA)]
-  --[ ReachAInit() ]->
-  [ Out(<$A,$B,pkA>)
-   , St_A($A,$B)
-  ]
+  [!Pk($Alice, pkA)]
+  --[ReachAInit()]->
+  [Out(<$Alice,$Bob,pkA>), St_A($Alice,$Bob)]
 
 rule B_Init:
   let sharedKey = pkA^~sk in
-  [ !Ltk($B,~sk), !Pk($A,pkA), !Pk($B,pkB), In(<$A,$B,pkA>)
-  ]
-  --[ ReachBInit(), ResponderKey(sharedKey)
-    ]->
-  [  Out(<senc('ack',sharedKey),$A,$B,pkB>)
-  ]
+  [!Ltk($Bob,~sk), !Pk($Alice,pkA), !Pk($Bob,pkB), In(<$Alice,$Bob,pkA>)]
+  --[ReachBInit(), ResponderKey(sharedKey)]->
+  [Out(<senc('ack',sharedKey),$Alice,$Bob,pkB>)]
 
 rule A_SendMsg:
   let sharedKey = pkB^~sk in
-  [ !Ltk($A,~sk), Fr(~msg), !Pk($B, pkB), In(<Boback,$A,$B,pkB>) , St_A($A,$B)
-  ]
-  --[ ReachASendMsg(),MessageWasSent(~msg), InitiatorKey(sharedKey), Eq(sdec(Boback,sharedKey),'ack')
-    ]->
-  [ Out(senc(~msg,sharedKey))
-  ]
+  [!Ltk($Alice,~sk), Fr(~msg), !Pk($Bob, pkB), In(<Boback,$Alice,$Bob,pkB>), St_A($Alice,$Bob)]
+  --[ ReachASendMsg(),MessageWasSent(~msg), InitiatorKey(sharedKey), Eq(sdec(Boback,sharedKey),'ack')]->
+  [Out(senc(~msg,sharedKey))]
 
 // This restriction allows you to use the Eq action fact in rules to constrain
 // that two terms must be equal. This is used to "compare" two messages or

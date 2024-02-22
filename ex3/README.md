@@ -32,9 +32,6 @@ First, the client sends a message to the authorization endpoint to get the initi
 If the authorization grant step succeeds, the client sends a message requesting an access token from the authorization server's token endpoint (this message should include the authorization code received in the authorization grant step). As in the authorization grant step, the client includes the redirection URI in the message. If the authorization server manages to authenticate the client, validate the authoirzation code and check that the redirection URI matches the one used in the authorization grant step, it sends back an access token.
 </span>
 - Which channels are used between what clients?
-<span style="color:red">
-What do we mean by what channels? And isn't there only one client?
-</span>
 ## Step 2: The Model
 
 Create a first model of the authorization code flow in Tamarin.

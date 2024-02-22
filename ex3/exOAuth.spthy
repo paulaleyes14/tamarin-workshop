@@ -1,4 +1,4 @@
-theory OAuth
+theory OAuthAfterStep3
 begin
 
 /** Secure channel model (begin) */
@@ -15,8 +15,52 @@ rule SecureChannelReceive:
 
 /** Secure channel model (end) */
 
-/**
- * ...put your model here...
- */
+// Register
+
+// Create a client with its redirection URI
+rule Client:
+[]-->[!Client($Client, $RedirectionURI)]
+
+// Create an authorization server with endpoints
+rule AuthorizationServer:
+[]-->[!AuthorizationServer($AuthorizationServer,$AuthorizationEndpoint, $TokenEndpoint)]
+
+// Register the client with the authorization server
+rule Register:
+[!Client($Client, $RedirectionURI), !AuthorizationServer($AuthorizationServer,$AuthorizationEndpoint, $TokenEndpoint), Fr(~client_secret)]-->[!Register($Client,$RedirectionURI,$AuthorizationServer,~client_secret)]
+
+rule AuthorizationRequest:
+  [!AuthorizationServer($AuthorizationServer,$AuthorizationEndpoint,$TokenEndpoint), !Register($Client, $RedirectionURI, $AuthorizationServer, ~client_secret), Fr(~state)]
+  --[RequestToken($Client, $AuthorizationServer)]->
+  [OutSecure($Client, $AuthorizationEndpoint, <$Client,$RedirectionURI, ~state>), St_ClientAuthorizationRequested($Client, $RedirectionURI, $AuthorizationServer, ~state)]
+
+rule AuthorizationResponse:
+  [!AuthorizationServer($AuthorizationServer, $AuthorizationEndpoint, $TokenEndpoint), !Register($Client,$RedirectionURI, $AuthorizationServer, ~client_secret), InSecure($Client, $AuthorizationEndpoint, <$Client, $RedirectionURI, state>), Fr(~code)]
+  -->
+  [OutSecure($AuthorizationEndpoint, $RedirectionURI, <~code, state>), St_AuthorizationServerResponded($Client, $RedirectionURI, $AuthorizationServer,  ~code)]
+
+rule AccessTokenRequest:
+  [!AuthorizationServer($AuthorizationServer, $AuthorizationEndpoint, $TokenEndpoint), !Register($Client,$RedirectionURI, $AuthorizationServer, ~client_secret), St_ClientAuthorizationRequested($Client,$RedirectionURI, $AuthorizationServer, ~state), InSecure($AuthorizationEndpoint, $RedirectionURI, <code, ~state>) ]
+  -->
+  [OutSecure($Client, $TokenEndpoint, <$Client, code, ~client_secret>), St_ClientTokenRequest($Client, $AuthorizationServer) ]
+
+rule AccessTokenResponse:
+  [!AuthorizationServer($AuthorizationServer, $AuthorizationEndpoint, $TokenEndpoint), !Register($Client,$RedirectionURI, $AuthorizationServer, ~client_secret), St_AuthorizationServerResponded($AuthorizationServer, $Client, $RedirectionURI, ~code)
+  , InSecure($Client, $TokenEndpoint, <$Client, ~code, ~client_secret>)
+  , Fr(~token) ]
+  --[ IssueToken($AuthorizationServer, $Client, ~token) ]->
+  [ OutSecure($TokenEndpoint, $Client, ~token) ]
+
+lemma Executability:
+  exists-trace
+  "Ex client server token #x #y.
+      RequestToken(client, server) @ #x
+    & IssueToken(server, client, token) @ #y"
+
+lemma TokenSecrecy:
+  "All server client t #x.
+        IssueToken(server, client, t) @ #x
+    ==> (not Ex #y. K(t) @ #y)"
 
 end
+
